@@ -138,41 +138,43 @@ my-translation-project/
 
 ## 配置文件格式
 
-生成的 `babeldoc.toml` 配置文件示例:
+> ⚠️ **重要**: 配置文件必须使用 UTF-8 编码，且**不能包含中文注释**，否则会报错 `Couldn't parse TOML file: 'gbk' codec can't decode byte`
+
+正确的 `babeldoc.toml` 配置文件示例:
 
 ```toml
 [babeldoc]
-# 基础设置
 debug = false
 lang-in = "en-US"
 lang-out = "zh-CN"
-qps = 4
+qps = 10
 output = "./translated"
 
-# PDF 处理选项
-pages = ""
 max-pages-per-part = 50
 skip-scanned-detection = false
-ocr-workaround = false
-watermark-output-mode = "watermarked"  # watermarked | no_watermark | both
+watermark-output-mode = "watermarked"
 
-# 翻译服务
 openai = true
-openai-model = "gpt-4o-mini"
-openai-base-url = "https://api.openai.com/v1"
+openai-model = "glm-4-flash"
+openai-base-url = "https://open.bigmodel.cn/api/paas/v4"
 openai-api-key = "your-api-key-here"
 
-# 术语表 (可选)
 # glossary-files = "./terms.csv"
 
-# 输出控制
 no-dual = false
 no-mono = false
 min-text-length = 5
 
-# 性能
 pool-max-workers = 8
 ```
+
+**配置说明**:
+- `lang-in` / `lang-out`: 源语言和目标语言代码
+- `openai-model`: 使用的模型名称
+- `openai-base-url`: API 端点地址
+- `openai-api-key`: 你的 API 密钥
+- `qps`: 每秒请求数，控制翻译速度
+- `max-pages-per-part`: 大文档分块大小
 
 ## 工作流程示例
 
@@ -252,6 +254,31 @@ Translation completed. Total: 1093, Successful: 1031, Fallback: 62
 
 ## 故障排除
 
+### 配置文件问题（最常见）
+
+**问题 1**: `Couldn't parse TOML file: 'gbk' codec can't decode byte`
+
+**原因**: TOML 配置文件包含非 ASCII 字符（如中文注释）
+
+**解决方案**: 确保配置文件只使用英文注释，或完全删除注释：
+```toml
+[babeldoc]
+debug = false
+lang-in = "en-US"
+lang-out = "zh-CN"
+# Do not use Chinese comments
+openai-api-key = "your-api-key-here"
+```
+
+**问题 2**: `error: unrecognized arguments` 或 `error: 必须指定一个参数 --openai`
+
+**原因**: 配置文件中的 `openai = true` 没有被正确读取
+
+**解决方案**:
+1. 检查配置文件编码是否为 UTF-8
+2. 确保配置文件在正确位置 (`~/.claude/babeldoc.toml` 或项目目录)
+3. 使用 `-c` 参数明确指定配置文件路径
+
 ### 安装问题
 
 **问题**: `pip install` 失败，提示依赖冲突
@@ -262,21 +289,6 @@ pip install uv
 uv tool install --python 3.12 BabelDOC
 ```
 
-### 配置文件问题
-
-**问题**: `Couldn't parse TOML file: 'gbk' codec can't decode byte`
-
-**原因**: TOML 文件包含非 ASCII 字符 (如中文注释)
-
-**解决方案**: 确保配置文件只使用英文注释，或删除所有注释:
-```toml
-[babeldoc]
-debug = false
-lang-in = "en-US"
-lang-out = "zh-CN"
-# 不要使用中文注释
-```
-
 ### 翻译质量问题
 
 **问题**: Fallback 比例过高 (>15%)
@@ -284,7 +296,7 @@ lang-out = "zh-CN"
 **可能原因和解决方案**:
 1. 模型能力不足 - 换用更强的模型 (如 `gpt-4o` 而非 `mini`)
 2. 源文档格式复杂 - 检查是否为扫描版，尝试 `--ocr-workaround`
-3. 术语表不完整 - 使用 `/babeldoc glossary extract` 提取术语
+3. 术语表不完整 - 从论文中提取术语
 
 ### 性能优化建议
 
@@ -309,16 +321,36 @@ max-pages-per-part = 50
 
 **问题**: `babeldoc: command not found`
 
-**解决方案**: 将 uv 工具目录添加到 PATH:
+**原因**: uv 工具安装的 babeldoc 可能不在系统 PATH 中。
 
-Windows (PowerShell):
+**Windows 解决方案**:
+
+uv 工具通常安装在 `C:\Users\<用户名>\AppData\Roaming\uv\tools\<工具名>\Scripts\` 目录。
+
+临时添加 (当前会话):
 ```powershell
-$env:PATH = "C:\Users\$env:USERNAME\.local\bin;$env:PATH"
+$env:PATH = "C:\Users\$env:USERNAME\AppData\Roaming\uv\tools\babeldoc\Scripts;$env:PATH"
 ```
 
-永久添加 (添加到系统环境变量):
+永久添加:
+1. 打开"系统属性" → "高级" → "环境变量"
+2. 在"用户变量"中编辑 `Path`
+3. 添加: `C:\Users\<用户名>\AppData\Roaming\uv\tools\babeldoc\Scripts`
+
+**或者** 创建一个全局批处理文件 wrapper (推荐):
+
+在 `C:\Windows\System32\` 创建 `babeldoc.bat`:
+```batch
+@echo off
+"C:\Users\%USERNAME%\AppData\Roaming\uv\tools\babeldoc\Scripts\babeldoc.exe" %*
 ```
-C:\Users\<用户名>\.local\bin
+
+**Mac/Linux 解决方案**:
+
+```bash
+# 添加到 PATH (写入 ~/.bashrc 或 ~/.zshrc)
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 ## 常见问题

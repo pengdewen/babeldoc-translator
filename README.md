@@ -68,9 +68,15 @@ pip install uv
 # 安装 BabelDOC
 uv tool install --python 3.12 BabelDOC
 
+# 如果 babeldoc 命令不可用，需要添加到 PATH：
+# 临时添加（当前会话）
+$env:PATH = "C:\Users\$env:USERNAME\AppData\Roaming\uv\tools\babeldoc\Scripts;$env:PATH"
+
 # 验证安装
 babeldoc --help
 ```
+
+**PATH 配置提示**: uv 工具安装在 `C:\Users\<用户名>\AppData\Roaming\uv\tools\babeldoc\Scripts\`，如果 `babeldoc` 命令不可用，请将该目录添加到系统 PATH，或在 System32 创建 `babeldoc.bat` wrapper 文件。
 
 ### Mac/Linux
 
@@ -95,14 +101,30 @@ babeldoc --help
 
 创建配置文件 `~/.claude/babeldoc.toml`：
 
+> ⚠️ **重要**: 配置文件必须使用 UTF-8 编码，且**不能包含中文注释**，否则会报错 `Couldn't parse TOML file: 'gbk' codec can't decode byte`
+
 ```toml
 [babeldoc]
+debug = false
 lang-in = "en-US"
 lang-out = "zh-CN"
+qps = 10
+output = "./translated"
+
+max-pages-per-part = 50
+skip-scanned-detection = false
+watermark-output-mode = "watermarked"
+
 openai = true
 openai-model = "glm-4-flash"
 openai-base-url = "https://open.bigmodel.cn/api/paas/v4"
 openai-api-key = "your-api-key-here"
+
+no-dual = false
+no-mono = false
+min-text-length = 5
+
+pool-max-workers = 8
 ```
 
 > ⚠️ **安全提醒**: 不要将包含真实 API Key 的配置文件提交到 Git 或公开仓库。
@@ -198,6 +220,10 @@ babeldoc-translator/
 ---
 
 ##  常见问题
+
+**Q: 配置文件报错 `Couldn't parse TOML file: 'gbk' codec can't decode byte`？**
+
+A: 配置文件包含了非 ASCII 字符（如中文注释）。请确保配置文件只使用英文注释，或完全删除注释，并使用 UTF-8 编码保存。
 
 **Q: 支持哪些语言？**
 

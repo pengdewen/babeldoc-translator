@@ -61,10 +61,10 @@ auto_enable_ocr_workaround = false
 translate-table-text = false
 
 # Formula font pattern
-# formular-font-pattern = ""
+# formula-font-pattern = ""
 
 # Formula char pattern
-# formular-char-pattern = ""
+# formula-char-pattern = ""
 
 # Show character bounding boxes (debug only)
 show-char-box = false
@@ -132,16 +132,13 @@ openai-api-key = "your-api-key-here"
 enable-json-mode-if-requested = false
 
 # Disable same text fallback
-disable_same_text_fallback = false
+disable-same-text-fallback = false
 
 # Custom system prompt
 # custom-system-prompt = "You are a professional, authentic machine translation engine."
 
 # Add formula placeholder hint
 add-formula-placehold-hint = false
-
-# Disable same text fallback (duplicate)
-disable-same-text-fallback = false
 
 # ====================
 # Output Control
